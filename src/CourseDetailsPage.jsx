@@ -6,6 +6,7 @@ export default function CourseDetailsPage() {
     const [openLessons, setOpenLessons] = useState({});
     const [showQuizModal, setShowQuizModal] = useState(false);
     const [showLessonModal, setShowLessonModal] = useState(false);
+    const [showStudentModal, setShowStudentModal] = useState(false);
     const [quizzes, setQuizzes] = useState([]);
     const [lessons, setLessons] = useState([]);
     const [quizForm, setQuizForm] = useState({
@@ -16,6 +17,12 @@ export default function CourseDetailsPage() {
     const [lessonForm, setLessonForm] = useState({
         title: "",
         content: "",
+    });
+    const [studentForm, setStudentForm] = useState({
+        name: "",
+        studentId: "",
+        email: "",
+        avatarUrl: "",
     });
 
     const [enrolledStudents, setEnrolledStudents] = useState([]);
@@ -85,6 +92,32 @@ export default function CourseDetailsPage() {
     const handleDeleteLesson = (lessonId, lessonTitle) => {
         if (window.confirm(`Are you sure you want to delete "${lessonTitle}"?`)) {
             setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+        }
+    };
+
+    const handleStudentSubmit = (e) => {
+        e.preventDefault();
+        if (!studentForm.name || !studentForm.studentId || !studentForm.email) {
+            alert("Please fill in all required student fields.");
+            return;
+        }
+
+        const newStudent = {
+            id: Date.now(),
+            name: studentForm.name,
+            studentId: studentForm.studentId,
+            email: studentForm.email,
+            avatar: studentForm.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentForm.name)}&background=49bbbd&color=fff&size=128`,
+        };
+
+        setEnrolledStudents((prev) => [...prev, newStudent]);
+        setStudentForm({ name: "", studentId: "", email: "", avatarUrl: "" });
+        setShowStudentModal(false);
+    };
+
+    const handleDeleteStudent = (studentId, studentName) => {
+        if (window.confirm(`Are you sure you want to remove "${studentName}" from this course?`)) {
+            setEnrolledStudents((prev) => prev.filter((s) => s.id !== studentId));
         }
     };
 
@@ -239,12 +272,23 @@ export default function CourseDetailsPage() {
 
                         {activeTab === "students" && (
                             <div className="tab-section" id="students">
-                                <h3>Enrolled Students</h3>
+                                <div className="quizzes-header">
+                                    <h3>Enrolled Students</h3>
+                                    <button
+                                        className="add-quiz-btn"
+                                        onClick={() => setShowStudentModal(true)}
+                                    >
+                                        <svg width='20' height='20' viewBox='0 0 24 24' fill='none' style={{ marginRight: '8px' }}>
+                                            <path d='M12 5V19M5 12H19' stroke='currentColor' strokeWidth='2' strokeLinecap='round'/>
+                                        </svg>
+                                        Add Student
+                                    </button>
+                                </div>
 
                                 {enrolledStudents.length === 0 ? (
                                     <div className="no-students">
                                         <i className="fas fa-user-graduate"></i>
-                                        <p>No students enrolled yet</p>
+                                        <p>No students enrolled yet. Click "Add Student" to enroll your first student.</p>
                                     </div>
                                 ) : (
                                     <div className="students-grid">
@@ -260,6 +304,18 @@ export default function CourseDetailsPage() {
                                                     <p className="student-id">{student.studentId}</p>
                                                     <p className="student-email">{student.email}</p>
                                                 </div>
+                                                <button
+                                                    className="student-delete-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteStudent(student.id, student.name);
+                                                    }}
+                                                    title="Remove student"
+                                                >
+                                                    <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor'>
+                                                        <path d='M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
+                                                    </svg>
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
@@ -464,6 +520,98 @@ export default function CourseDetailsPage() {
                                 </button>
                                 <button type="submit" className="btn-submit">
                                     Add Lesson
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {showStudentModal && (
+                <div className="modal-overlay" onClick={() => setShowStudentModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Add Student to Course</h2>
+                            <button
+                                className="modal-close"
+                                onClick={() => setShowStudentModal(false)}
+                            >
+                                <svg width='24' height='24' viewBox='0 0 24 24' fill='none'>
+                                    <path d='M18 6L6 18M6 6L18 18' stroke='currentColor' strokeWidth='2' strokeLinecap='round'/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleStudentSubmit} className="modal-form">
+                            <div className="form-group">
+                                <label htmlFor="student-name">Student Name *</label>
+                                <input
+                                    id="student-name"
+                                    name="name"
+                                    value={studentForm.name}
+                                    onChange={(e) =>
+                                        setStudentForm({ ...studentForm, name: e.target.value })
+                                    }
+                                    placeholder="e.g. John Smith"
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="student-id">Student ID *</label>
+                                    <input
+                                        id="student-id"
+                                        name="studentId"
+                                        value={studentForm.studentId}
+                                        onChange={(e) =>
+                                            setStudentForm({ ...studentForm, studentId: e.target.value })
+                                        }
+                                        placeholder="e.g. 20210001"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="student-email">Email *</label>
+                                    <input
+                                        id="student-email"
+                                        name="email"
+                                        type="email"
+                                        value={studentForm.email}
+                                        onChange={(e) =>
+                                            setStudentForm({ ...studentForm, email: e.target.value })
+                                        }
+                                        placeholder="e.g. john.smith@university.edu"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="student-avatar">Avatar URL (optional)</label>
+                                <input
+                                    id="student-avatar"
+                                    name="avatarUrl"
+                                    type="url"
+                                    value={studentForm.avatarUrl}
+                                    onChange={(e) =>
+                                        setStudentForm({ ...studentForm, avatarUrl: e.target.value })
+                                    }
+                                    placeholder="https://example.com/avatar.jpg (auto-generated if empty)"
+                                />
+                            </div>
+
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="btn-cancel"
+                                    onClick={() => setShowStudentModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn-submit">
+                                    Add Student
                                 </button>
                             </div>
                         </form>
