@@ -1,12 +1,16 @@
-import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import CoursesPage from './CoursesPage';
-import './App.css';
+import CourseDetailsPage from './CourseDetailsPage';
 
 function App() {
     return (
-        <div className="App">
-            <CoursesPage />
-        </div>
+        <Router>
+            <Routes>
+                <Route path="/" element={<Navigate to="/courses" replace />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/course/:courseId" element={<CourseDetailsPage />} />
+            </Routes>
+        </Router>
     );
 }
 
